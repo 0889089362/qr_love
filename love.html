@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Marry me</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: black;
+      }
+
+      canvas {
+        display: block;
+      }
+
+      .rain {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      .falling-text {
+        position: absolute;
+        top: -10vh;
+        color: #ff3b6b;
+        animation: fall linear infinite;
+        font-family: "Segoe UI", Arial, sans-serif;
+        text-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      }
+
+      @keyframes fall {
+        0% {
+          transform: translateY(-10vh);
+          opacity: 0;
+        }
+        10% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(110vh);
+          opacity: 0;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .falling-text {
+          font-size: 12px;
+        }
+      }
+
+      @media (max-width: 390px) {
+        body {
+          font-size: 10px;
+        }
+        canvas {
+          width: 100%;
+          height: 100%;
+        }
+        .falling-text {
+          font-size: 6px;
+        }
+        .heart {
+          --size: 16px;
+        }
+      }
+
+      @media (max-width: 430px) {
+        body {
+          font-size: 12px;
+        }
+        canvas {
+          width: 100%;
+          height: 100%;
+        }
+        .falling-text {
+          font-size: 8px;
+        }
+        .heart {
+          --size: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div class="rain" id="rain"></div>
+
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      let texts = [];
+      let hearts = [];
+      const message = "Thủy Xinh Gái ơi Đồng ý làm vợ anh nhé♡";
+
+      const messages = [
+        "Thủy Xinh Gái ơi Đồng ý làm vợ anh nhé♡",
+        "Anh yêu em nhiều lắm!",
+        "Em là ánh sáng đời anh!",
+        "Mãi bên nhau em nhé!",
+        "Trái tim anh thuộc về em!",
+        "Cảm ơn em đã đến bên anh!",
+      ];
+
+      // Hàm random
+      function rand(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      // Tạo đối tượng text neon
+      class NeonText {
+        constructor() {
+          this.x = rand(0, canvas.width);
+          this.y = rand(-50, -10);
+          this.size = rand(20, 50);
+          // faster vertical speed
+          this.speedY = rand(2, 6);
+          this.message = messages[Math.floor(rand(0, messages.length))];
+          this.color = `hsl(${rand(0, 360)}, 100%, 70%)`;
+          this.opacity = rand(0.7, 1); // Random opacity
+          this.rotation = -Math.PI / 2; // Rotate text to vertical
+        }
+        draw() {
+          ctx.save();
+          ctx.translate(this.x, this.y);
+          ctx.rotate(this.rotation); // Apply rotation for vertical text
+          ctx.font = `${this.size}px Arial`;
+          ctx.shadowColor = this.color;
+          ctx.shadowBlur = 20;
+          ctx.fillStyle = this.color;
+          ctx.globalAlpha = this.opacity; // Apply opacity
+          ctx.fillText(this.message, 0, 0);
+          ctx.restore();
+        }
+        update() {
+          this.y += this.speedY;
+          if (this.y > canvas.height + 20) {
+            this.x = rand(0, canvas.width);
+            this.y = rand(-50, -10);
+            this.message = messages[Math.floor(rand(0, messages.length))];
+            this.color = `hsl(${rand(0, 360)}, 100%, 70%)`;
+            this.opacity = rand(0.7, 1);
+          }
+          this.draw();
+        }
+      }
+
+      // Tạo đối tượng trái tim rơi
+      class Heart {
+        constructor() {
+          this.x = rand(0, canvas.width);
+          this.y = rand(-50, -10);
+          this.size = rand(15, 30);
+          // faster falling hearts
+          this.speedY = rand(2, 6);
+        }
+        draw() {
+          ctx.fillStyle = "red";
+          ctx.beginPath();
+          ctx.moveTo(this.x, this.y);
+          ctx.bezierCurveTo(
+            this.x - this.size,
+            this.y - this.size,
+            this.x - this.size * 1.5,
+            this.y + this.size / 2,
+            this.x,
+            this.y + this.size
+          );
+          ctx.bezierCurveTo(
+            this.x + this.size * 1.5,
+            this.y + this.size / 2,
+            this.x + this.size,
+            this.y - this.size,
+            this.x,
+            this.y
+          );
+          ctx.fill();
+        }
+        update() {
+          this.y += this.speedY;
+          if (this.y > canvas.height + 20) {
+            this.x = rand(0, canvas.width);
+            this.y = rand(-50, -10);
+          }
+          this.draw();
+        }
+      }
+
+      // Khởi tạo nhiều text và tim
+      for (let i = 0; i < 20; i++) texts.push(new NeonText());
+      for (let i = 0; i < 15; i++) hearts.push(new Heart());
+
+      // Animation loop
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        texts.forEach((t) => t.update());
+        hearts.forEach((h) => h.update());
+        requestAnimationFrame(animate);
+      }
+      animate();
+
+      window.addEventListener("resize", () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+
+      // Mưa text
+      const rain = document.getElementById("rain");
+      const TEXTS = ["❤️", "💌", "💖", "💕", "🌹", "😍"];
+      const TOTAL_TEXTS = 50;
+
+      function createText() {
+        const text = document.createElement("div");
+        text.className = "falling-text";
+        text.textContent = TEXTS[Math.floor(rand(0, TEXTS.length))];
+        text.style.left = rand(0, 100) + "vw";
+        // shorten animation so emoji fall faster
+        text.style.animationDuration = rand(1, 3) + "s";
+        text.style.fontSize = rand(16, 32) + "px";
+        rain.appendChild(text);
+
+        // remove after a shorter time consistent with the faster animation
+        setTimeout(() => {
+          text.remove();
+        }, 3500);
+      }
+
+      for (let i = 0; i < TOTAL_TEXTS; i++) {
+        setTimeout(createText, rand(0, 3000));
+      }
+
+      // create more frequently
+      setInterval(createText, 300);
+    </script>
+  </body>
+</html>
